@@ -1,4 +1,4 @@
-package lab3;
+package weightedAlphabetGen;
 
 import java.util.Random;
 
