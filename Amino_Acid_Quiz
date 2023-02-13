@@ -1,0 +1,224 @@
+package lab5;
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Random;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.Timer;
+
+public class AminoGUI extends JFrame
+{
+	private static final long serialVersionUID = 1975L;
+	//sets empty variables for the counts and indices
+	static Integer correctCount = 0;
+	static Integer incorrectCount = 0;
+	static Integer index = 0;
+	//creates new text fields for displaying things
+	private JTextField prompt = new JTextField();
+	private JTextField input = new JTextField("");
+	private JTextField Correct = new JTextField("Correct\n" + correctCount);
+	private JTextField Incorrect = new JTextField("Incorrect\n" + incorrectCount);
+	private JTextField time = new JTextField();
+	//buttons for starting and canceling program
+	private final JButton start = new JButton("Start Quiz");
+	private final JButton cancel = new JButton("Cancel Quiz");
+	//third button for aesthetic and symmetry
+	private final JButton space = new JButton("");
+	//creates new timer & initializes timer length
+	Timer timer = new Timer(1000, new timeActionListener());
+	int timeRemaining = 31;
+	
+	final String[] SHORT_NAMES = 
+		{ "A","R", "N", "D", "C", "Q", "E",
+		"G",  "H", "I", "L", "K", "M", "F", 
+		"P", "S", "T", "W", "Y", "V" };
+	
+	final String[] FULL_NAMES = 
+	{"alanine","arginine", "asparagine", 
+	"aspartic acid", "cysteine",
+	"glutamine",  "glutamic acid",
+	"glycine" ,"histidine","isoleucine",
+	"leucine",  "lysine", "methionine", 
+	"phenylalanine", "proline", 
+	"serine","threonine","tryptophan", 
+	"tyrosine", "valine"};
+	
+	//actionListener for timer
+	private class timeActionListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent i)
+		{
+			//counts down by 1
+			timeRemaining--;
+			//displays decreasing time
+			time.setText(String.valueOf(timeRemaining));
+			//
+			if(timeRemaining <= 0) 
+			{
+				//stops the timer when time runs out, and prevents the user from providing further input
+				timer.stop();
+				input.setEnabled(false);
+				prompt.setEnabled(false);
+			}
+		}
+	}
+	
+	public void aminoGen()
+	{
+		Random random = new Random();
+		String acid = "";
+		//getting new index
+		index = random.nextInt(19);
+		//getting acid at that index
+		acid = FULL_NAMES[index];
+		//displaying acid in the prompt field
+		updateTextField(acid);
+	}
+	
+	//actionListener for start button
+	private class StartListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent arg0)
+		{
+			//generates new amino acid when start button is hit
+			aminoGen();
+			//starts timer when start button is hit
+			timer.start();
+			//allows the user to input amino acids
+			input.setEnabled(true);
+			//reinitializes the counters for displaying score
+			correctCount = 0;
+			incorrectCount = 0;
+			Correct.setText("Correct\n" + correctCount);
+			Incorrect.setText("Incorrect\n" + correctCount);
+			//reinitializes timer length
+			timeRemaining = 31;
+		}
+	}
+
+	//cancel button actionListener
+	private class CancelListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			//stops the timer and prevents further user input
+			timer.stop();
+			input.setEnabled(false);
+			//tells the user they canceled the quiz
+			updateTextField("You have canceled the quiz.");
+		}
+	}
+	
+	//input actionListener
+	private class inputListener implements ActionListener
+	{
+		public void actionPerformed(ActionEvent e)
+		{
+			//code from original amino acid quiz
+			String answer = input.getText();
+			//code for updating incorrect and correct counters based on user input, and displays the counts
+			if (answer.toUpperCase().equals(SHORT_NAMES[index])) 
+				{
+					correctCount ++;
+					updateCorrectField(correctCount);
+				}
+			else
+				{
+					incorrectCount ++;
+					updateIncorrectField(incorrectCount);
+				}
+			//clears the input box after each user input
+			input.setText("");
+			//generates new amino acid
+			aminoGen();
+		}
+	}
+	/** the following three methods just update the text field 
+	 * given the calls in the previous methods*/
+	private void updateCorrectField(Integer x)
+	{
+		Correct.setText("Correct:\n" + String.valueOf(x));
+		validate();
+	}
+	
+	private void updateIncorrectField(Integer x)
+	{
+		Incorrect.setText("Incorrect:\n" + String.valueOf(x));
+		validate();
+	}
+	
+	
+	private void updateTextField(String text)
+	{
+		prompt.setText(text);
+		validate();
+	}
+
+	/** The next creates JPanel for the start and cancel buttons,
+	 * as well as the additional middle empty button for visuals
+	 * and the following method does the same, but for the prompt and time at the top*/
+	
+	private JPanel startCancel()
+	{
+		JPanel panel = new JPanel();
+		panel.setLayout(new GridLayout(0,3));
+		panel.add(start);
+		panel.add(space);
+		panel.add(cancel);
+		
+		start.addActionListener(new StartListener());
+		cancel.addActionListener(new CancelListener());
+
+		return panel;
+	}
+	
+	private JPanel promptTime()
+	{
+		JPanel pt = new JPanel();
+		pt.setLayout(new GridLayout(2,0));
+		pt.add(time);
+		pt.add(prompt);
+		return pt;
+	}
+	
+	//this is the GUI itself
+	public AminoGUI()
+	{
+		//sets title
+		super("Amino Acid Quiz");
+		setLocationRelativeTo(null);
+		//sets appropriate window size
+		setSize(400,400);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		getContentPane().setLayout(new BorderLayout());
+		//adds JPanel and assigns it to south
+		getContentPane().add(startCancel(), BorderLayout.SOUTH);
+		//adds action listeners
+		start.addActionListener(new StartListener());
+		cancel.addActionListener(new CancelListener());
+		time.addActionListener(new timeActionListener());
+		//adds JPanel for prompt and time to north
+		getContentPane().add(promptTime(), BorderLayout.NORTH);
+		//adds text field for user input answers, as well as two text fields to show the number of correct & incorrect answers
+		getContentPane().add(input, BorderLayout.CENTER);
+		getContentPane().add(Correct, BorderLayout.WEST);
+		getContentPane().add(Incorrect, BorderLayout.EAST);
+		//sets some text fields to non-editable so the user can't mess with them, makes this cleaner
+		Correct.setEditable(false);
+		prompt.setEditable(false);
+		time.setEditable(false);
+		Incorrect.setEditable(false);
+		//adds action listener for user input
+		input.addActionListener(new inputListener());
+		setVisible(true);
+	}	
+	public static void main(String[] args)
+	{
+		new AminoGUI();
+	}
+}
