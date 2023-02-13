@@ -1,4 +1,4 @@
-package PrimeFinderNoGUI;
+package PrimeFinder;
 
 import java.util.ArrayList;
 import java.util.Collections;
