@@ -1,4 +1,4 @@
-package lab5;
+package aminoAcidQuiz;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
