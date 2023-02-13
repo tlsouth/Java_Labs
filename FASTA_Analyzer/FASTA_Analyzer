@@ -1,0 +1,158 @@
+package lab4;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+public class FastaSequence
+{
+	//initializing empty StringBuffers to which the headers and sequences will be added to
+	private StringBuffer header = new StringBuffer();
+	private StringBuffer sequence = new StringBuffer();
+	public static List<FastaSequence> readFastaFile(String filepath) throws Exception
+	{
+		//create new ArrayList of objects FastaSequence
+		List<FastaSequence> list = new ArrayList <FastaSequence>();
+		//read file
+		BufferedReader reader = new BufferedReader(new FileReader(new File(filepath)));
+		//move lines
+		String nextLine = reader.readLine();
+		//while there is a next line
+		while(nextLine != null)
+		{
+			//new FastaSequence object fs
+			FastaSequence fs = new FastaSequence();
+			//using the characteristics > to identify header lines
+			if(nextLine.startsWith(">"))
+			{
+				//removes the > from the header (this could have also been done in the getHeader method)
+				nextLine = nextLine.replaceAll(">", "");
+				//append the header to the header StringBuffer
+				fs.header.append(nextLine);
+			}
+			//add content to fs
+			list.add(fs);
+			//move lines
+			nextLine = reader.readLine();
+			//this loop allows us to append multiple lines of sequences that all comprise one sequence
+			while(nextLine != null && ! nextLine.startsWith(">"))
+			{
+				//adds the sequence to the sequence in the line above it given that there is no header separating them; this means both lines make up a sequence
+				fs.sequence.append(nextLine);
+				//move lines
+				nextLine = reader.readLine();
+			}
+		}
+		//closes reader and returns the list containing the FastaSequence objects with the headers and sequences
+		reader.close();
+		return list;
+	}
+	//overrides the toString method to return the headers and sequences in a way that is easy to read
+	@Override
+	public String toString()
+	{
+		return  header + " " + sequence;
+	}
+	//getHeader method which returns the header of the sequence
+	public String getHeader()
+	{
+		//sets the header to a string variable and returns it
+		String head = header.toString();
+		return head;
+	}
+	//getSequence method which returns the sequence
+	public String getSequence()
+	{
+		//sets sequence to a string and returns it
+		String seq = sequence.toString();
+		return seq;
+	}
+	//method for getting the gc ratio
+	public float getGCRatio()
+	{
+		//initializes array to store counts of 'G' and 'C'
+		float[] gcCount = new float[2];
+		//loop that iterates through the length of the sequence
+		for(int x = 0; x < sequence.length(); x++)
+		{
+			char GC = sequence.charAt(x);
+			//switch to increment counter if 'G' or 'C' is encountered
+			switch (GC)
+			{
+			case 'G':
+				gcCount[0]++;
+				break;
+			case 'C':
+				gcCount[1]++;
+				break;
+			}
+		}
+		//returns the total ratio using the counts stored in the array
+		return (gcCount[0] + gcCount[1]) / sequence.length();
+	}
+	//counter for counting occurrence of each base in the sequence and stores the counts in an array for later output to a file
+	public int[] nucleotideCounter()
+	{
+	    int[] nucCount = new int[4];
+	    for (int x = 0; x < sequence.length(); x++)
+	    {
+	        char nucleotide = sequence.charAt(x);
+	        //switch to increment counter when corresponding base is encountered
+	        switch (nucleotide)
+	        {
+	            case 'A':
+	                nucCount[0]++;
+	                break;
+	            case 'T':
+	                nucCount[1]++;
+	                break;
+	            case 'C':
+	                nucCount[2]++;
+	                break;
+	            case 'G':
+	                nucCount[3]++;
+	                break;
+	        }
+	    }
+	    return nucCount;
+	}
+	//method for creating the table given the list and output file path
+	public static void writeTableSummary( List<FastaSequence> list, File outputFile) throws Exception
+	{
+		//giving writer the path
+		BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile));
+		//setting up the columns of the table
+		writer.write("sequenceID\tnumA\tnumC\tnumG\tnumT\tsequence\n");
+		
+		//loop to iterate through each header and sequence in the list
+		for(FastaSequence fs : list)
+		{
+			int[] nucCount = fs.nucleotideCounter();
+			//writes each required element into the proper column in the table using tabs and newlines
+			//file can be successfully opened in excel and matches the example given in lab powerpoint
+			writer.write(fs.getHeader() + "\t" + 
+			nucCount[0] + "\t" + 
+			nucCount[1] + "\t" + 
+			nucCount[2] + "\t" + 
+			nucCount[3] + "\t" + 
+			fs.getSequence() + "\n");
+		}
+		//closing writer
+		writer.flush();
+		writer.close();
+	}
+	//main method
+	public static void main(String[] args) throws Exception
+	{
+		//gives file path for the fastafile to be read in REPLACE FILEPATH AS NEEDED
+	    List<FastaSequence> fastaList = FastaSequence.readFastaFile("/Users/Tyler/Desktop/seqs.fa");
+	     //file path for output file REPLACE FILEPATH AS NEEDED
+	     File myFile = new File("/Users/Tyler/Desktop/out.txt");
+	     //calling on the writeTableSummary method to generate table of sequence data
+	     writeTableSummary(fastaList, myFile);
+	}
+}
